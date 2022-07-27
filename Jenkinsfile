@@ -30,7 +30,7 @@ pipeline{
              [
                  artifactId: 'simple-app',
                  classifier: '',
-                 file: '/var/lib/jenkins/workspace/simple-app/target/simple-app.war',
+                 file: '/var/lib/jenkins/workspace/simple-app/target/simpleapp.war',
                  type: 'war'
                 ]
             ],
