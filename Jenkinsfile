@@ -20,7 +20,7 @@ pipeline{
         stage("Maven Build"){
             steps{
                 sh "mvn clean package"
-                sh "mv target/*.war /var/lib/jenkins/workspace/simple-app/target/simple-app.war"
+                sh "mv target/*.war /var/lib/jenkins/workspace/simple-app/target/simpleapp.war"
             }
          }
          stage("Publish to Nexus Repository Manager") {
