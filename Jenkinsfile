@@ -1,41 +1,47 @@
-pipeline {
+pipeline{
     agent any
     tools {
-        maven 'maven3'
+        maven "Maven 3.6.3"
     }
-    options {
-        buildDiscarder logRotator(daysToKeepStr: '5', numToKeepStr: '7')
+    environment {
+        NEXUS_VERSION = "nexus3.40.1-01"
+        NEXUS_PROTOCOL = "http"
+        NEXUS_URL = "3.110.48.86:8081"
+        NEXUS_REPOSITORY = "simple-app"
+        NEXUS_CREDENTIAL_ID = "nexus3"
     }
     stages{
-        stage('Build'){
+        stage("GIT checkout"){
             steps{
-                 sh script: 'mvn clean package'
-                 archiveArtifacts artifacts: 'target/*.war', onlyIfSuccessful: true
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Nvnrock51/simple-app.git']]])
+                
             }
         }
-        stage('Upload War To Nexus'){
+        stage("Maven Build"){
             steps{
-                script{
-
-                    def mavenPom = readMavenPom file: 'pom.xml'
-                    def nexusRepoName = mavenPom.version.endsWith("SNAPSHOT") ? "simpleapp-snapshot" : "simpleapp-release"
-                    nexusArtifactUploader artifacts: [
-                        [
-                            artifactId: 'simple-app', 
-                            classifier: '', 
-                            file: "target/simple-app-${mavenPom.version}.war", 
-                            type: 'war'
-                        ]
-                    ], 
-                    credentialsId: 'nexus3', 
-                    groupId: 'in.javahome', 
-                    nexusUrl: '172.31.15.204:8081', 
-                    nexusVersion: 'nexus3', 
-                    protocol: 'http', 
-                    repository: nexusRepoName, 
-                    version: "${mavenPom.version}"
-                    }
+                sh "mvn clean package"
+                sh "mv target/*.war target/simple-app.war"
             }
-        }
+         }
+         stage("Publish to Nexus Repository Manager") {
+            steps {
+         nexusArtifactUploader artifacts: 
+         [
+             [
+                 artifactId: 'simple-app',
+                 classifier: '',
+                 file: '/var/lib/jenkins/workspace/simple-app/target/simple-app.war',
+                 type: 'war'
+                ]
+            ],
+                 credentialsId: 'nexus3',
+                 groupId: 'in.javahome',
+                 nexusUrl: '3.110.48.86:8081',
+                 nexusVersion: 'nexus3',
+                 protocol: 'http', 
+                 repository: 'simpleapp-release', 
+                 version: '3.0.0'   
+          }
     }
+  }
 }
